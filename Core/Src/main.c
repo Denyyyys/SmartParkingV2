@@ -21,6 +21,7 @@
 #include "i2c.h"
 #include "icache.h"
 #include "rtc.h"
+#include "spi.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -60,13 +61,13 @@ static void SystemPower_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin)
-{
-	if (GPIO_Pin == GPIO_PIN_13)
-	{
-		HAL_GPIO_TogglePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
-	}
-}
+//void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin)
+//{
+//	if (GPIO_Pin == GPIO_PIN_13)
+//	{
+////		HAL_GPIO_TogglePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
+//	}
+//}
 /* USER CODE END 0 */
 
 /**
@@ -105,6 +106,7 @@ int main(void)
   MX_USART1_UART_Init();
   MX_I2C1_Init();
   MX_RTC_Init();
+  MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
   lcd_init();
   lcd_backlight(1);
