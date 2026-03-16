@@ -22,6 +22,7 @@
 #include "icache.h"
 #include "rtc.h"
 #include "spi.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -107,7 +108,10 @@ int main(void)
   MX_I2C1_Init();
   MX_RTC_Init();
   MX_SPI1_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
+
   lcd_init();
   lcd_backlight(1);
 //  char* msg = "Swieci";
@@ -122,20 +126,21 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
-	  HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
-
-	  snprintf(msg, sizeof(msg),
-	          "Time:%02d:%02d:%02d\r\nDate:20%02d-%02d-%02d (WD:%d)\r\n",
-	          sTime.Hours,
-	          sTime.Minutes,
-	          sTime.Seconds,
-	          sDate.Year,
-	          sDate.Month,
-	          sDate.Date,
-	          sDate.WeekDay);
-
-	 HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+	  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 2000);
+//	  HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+//	  HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+//
+//	  snprintf(msg, sizeof(msg),
+//	          "Time:%02d:%02d:%02d\r\nDate:20%02d-%02d-%02d (WD:%d)\r\n",
+//	          sTime.Hours,
+//	          sTime.Minutes,
+//	          sTime.Seconds,
+//	          sDate.Year,
+//	          sDate.Month,
+//	          sDate.Date,
+//	          sDate.WeekDay);
+//
+//	 HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
 //	 lcd_clear();
 //	 lcd_set_cursor(0, 0);
 //	 lcd_write_string(msg);
