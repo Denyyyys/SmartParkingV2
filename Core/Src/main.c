@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "crc.h"
 #include "i2c.h"
 #include "icache.h"
 #include "rtc.h"
@@ -30,11 +31,28 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include <string.h>
+#include "hash/cmox_hash_retvals.h"
+#include "hash/cmox_sha256.h"
+#include "cmox_init.h"
+#include "hash/cmox_hash.h"
+#include "cmox_crypto.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+int __io_putchar(int ch) {
+	HAL_UART_Transmit(&huart1, (uint8_t*)&ch, 1, HAL_MAX_DELAY);
+	return 1;
+}
 
+void btox(uint8_t *hexbuf, const uint8_t *binbuf, int n) {
+	n *= 2;
+	hexbuf[n] = 0x00;
+	const char hex[]= "0123456789abcdef";
+	while ( -- n >= 0)
+		hexbuf[n] = hex[(binbuf[n>>1] >> ((1-(n&1)) << 2)) & 0xF];
+}
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -57,7 +75,22 @@
 void SystemClock_Config(void);
 static void SystemPower_Config(void);
 /* USER CODE BEGIN PFP */
+void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin)
+{
+	if (GPIO_Pin == B3_Pin)
+	{
+		printf("yo3");
+//		HAL_GPIO_TogglePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
+	}
 
+	if (GPIO_Pin == B2_Pin)
+	{
+		printf("yo2");
+//		HAL_GPIO_TogglePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
+	}
+
+
+}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -109,24 +142,172 @@ int main(void)
   MX_RTC_Init();
   MX_SPI1_Init();
   MX_TIM2_Init();
+  MX_CRC_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
 
-  lcd_init();
-  lcd_backlight(1);
+//  lcd_init();
+//  lcd_backlight(1);
 //  char* msg = "Swieci";
-  RTC_TimeTypeDef sTime;
-  RTC_DateTypeDef sDate;
-  char msg[100];
-
+//  RTC_TimeTypeDef sTime;
+//  RTC_DateTypeDef sDate;
+//  char msg[100];
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+//
+// =========================== HASH BEGIN ===========================
+//
+//  cmox_hash_retval_t retval;
+//  uint8_t data[] = "Alice has a cat.";
+//  uint8_t hash[CMOX_SHA256_SIZE];
+//  size_t computed_size;
+//  uint8_t buffer[2*CMOX_SHA256_SIZE+1];
+//  if (cmox_initialize(NULL) != CMOX_INIT_SUCCESS)
+//	  Error_Handler();
+//
+//  retval = cmox_hash_compute(CMOX_SHA256_ALGO, data, strlen((char*)data), hash, CMOX_SHA256_SIZE, &computed_size);
+//
+//  if (retval != CMOX_HASH_SUCCESS)
+//	  Error_Handler();
+//  printf("Input data (ASCII): %s (length=%d) \n\r", data, strlen((char*)data));
+//  btox(buffer, data, strlen((char*)data));
+//  printf("Input data (hex) : %s\n\r", buffer);
+// =========================== HASH END ===========================
+// =========================== AES BEGIN ===========================
+//  cmox_cbc_handle_t Cbc_Ctx;
+//  #define CHUNK_SIZE  48u
+//
+//  const uint8_t Key[] =
+//  {
+//    0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c
+//  };
+//  const uint8_t IV[] =
+//  {
+//    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f
+//  };
+//
+//  const uint8_t Plaintext[] =
+//  {
+//    0x6b, 0xc1, 0xbe, 0xe2, 0x2e, 0x40, 0x9f, 0x96, 0xe9, 0x3d, 0x7e, 0x11, 0x73, 0x93, 0x17, 0x2a,
+//    0xae, 0x2d, 0x8a, 0x57, 0x1e, 0x03, 0xac, 0x9c, 0x9e, 0xb7, 0x6f, 0xac, 0x45, 0xaf, 0x8e, 0x51,
+//    0x30, 0xc8, 0x1c, 0x46, 0xa3, 0x5c, 0xe4, 0x11, 0xe5, 0xfb, 0xc1, 0x19, 0x1a, 0x0a, 0x52, 0xef,
+//    0xf6, 0x9f, 0x24, 0x45, 0xdf, 0x4f, 0x9b, 0x17, 0xad, 0x2b, 0x41, 0x7b, 0xe6, 0x6c, 0x37, 0x10
+//  };
+//  const uint8_t Expected_Ciphertext[] =
+//  {
+//    0x76, 0x49, 0xab, 0xac, 0x81, 0x19, 0xb2, 0x46, 0xce, 0xe9, 0x8e, 0x9b, 0x12, 0xe9, 0x19, 0x7d,
+//    0x50, 0x86, 0xcb, 0x9b, 0x50, 0x72, 0x19, 0xee, 0x95, 0xdb, 0x11, 0x3a, 0x91, 0x76, 0x78, 0xb2,
+//    0x73, 0xbe, 0xd6, 0xb8, 0xe3, 0xc1, 0x74, 0x3b, 0x71, 0x16, 0xe6, 0x9e, 0x22, 0x22, 0x95, 0x16,
+//    0x3f, 0xf1, 0xca, 0xa1, 0x68, 0x1f, 0xac, 0x09, 0x12, 0x0e, 0xca, 0x30, 0x75, 0x86, 0xe1, 0xa7
+//  };
+//
+//  uint8_t Computed_Ciphertext[sizeof(Expected_Ciphertext)];
+//  uint8_t Computed_Plaintext[sizeof(Plaintext)];
+//
+//  cmox_cipher_retval_t retval;
+//  size_t computed_size;
+//
+//  cmox_cipher_handle_t *cipher_ctx;
+//
+//  uint32_t index;
+//
+//
+//  cmox_init_arg_t init_target = {CMOX_INIT_TARGET_AUTO, NULL};
+//
+//  if (cmox_initialize(&init_target) != CMOX_INIT_SUCCESS)
+//  {
+//    Error_Handler();
+//  }
+//
+//  cipher_ctx = cmox_cbc_construct(&Cbc_Ctx, CMOX_AES_CBC_ENC);
+//  if (cipher_ctx == NULL)
+//  {
+//    Error_Handler();
+//  }
+//
+//  retval = cmox_cipher_init(cipher_ctx);
+//  if (retval != CMOX_CIPHER_SUCCESS)
+//  {
+//    Error_Handler();
+//  }
+//
+//  retval = cmox_cipher_setKey(cipher_ctx, Key, sizeof(Key));  /* AES key to use */
+//  if (retval != CMOX_CIPHER_SUCCESS)
+//  {
+//    Error_Handler();
+//  }
+//
+//  retval = cmox_cipher_setIV(cipher_ctx, IV, sizeof(IV));     /* Initialization vector */
+//	if (retval != CMOX_CIPHER_SUCCESS)
+//	{
+//	  Error_Handler();
+//	}
+//
+//  for (index = 0; index < (sizeof(Plaintext) - CHUNK_SIZE); index += CHUNK_SIZE)
+//  {
+//	    retval = cmox_cipher_append(cipher_ctx,
+//	                                &Plaintext[index], CHUNK_SIZE,        /* Chunk of plaintext to encrypt */
+//	                                Computed_Ciphertext, &computed_size); /* Data buffer to receive generated chunk
+//	                                                                         of ciphertext */
+//
+//	    if (retval != CMOX_CIPHER_SUCCESS)
+//	    {
+//	      Error_Handler();
+//	    }
+//
+//	    /* Verify generated data size is the expected one */
+//	    if (computed_size != CHUNK_SIZE)
+//	    {
+//	      Error_Handler();
+//	    }
+//
+//
+//	    if (memcmp(&Expected_Ciphertext[index], Computed_Ciphertext, computed_size) != 0)
+//	    {
+//	      Error_Handler();
+//	    }
+//  }
+//
+//  if (index < sizeof(Plaintext))
+//	{
+//		retval = cmox_cipher_append(cipher_ctx,
+//										&Plaintext[index],
+//										sizeof(Plaintext) - index,              /* Last part of plaintext to encrypt */
+//										Computed_Ciphertext, &computed_size);   /* Data buffer to receive generated last
+//																				   part of ciphertext */
+//		if (retval != CMOX_CIPHER_SUCCESS)
+//		{
+//		  Error_Handler();
+//		}
+//
+//		if (computed_size != (sizeof(Plaintext) - index))
+//		{
+//		  Error_Handler();
+//		}
+//
+//		if (memcmp(&Expected_Ciphertext[index], Computed_Ciphertext, computed_size) != 0)
+//		{
+//		  Error_Handler();
+//		}
+//	}
+//
+// 	    retval = cmox_cipher_cleanup(cipher_ctx);
+// 	    if (retval != CMOX_CIPHER_SUCCESS)
+// 	    {
+// 	      Error_Handler();
+// 	    }
+// =========================== AES END ===========================
+//  char* msg = "sometext\r\n";
+//  app_main();
+
+
   while (1)
   {
-	  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 2000);
+//	  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 2000);
 //	  HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
 //	  HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
 //
@@ -141,10 +322,12 @@ int main(void)
 //	          sDate.WeekDay);
 //
 //	 HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+//	 printf("Dioda sie swieci %s\r\n", msg);
 //	 lcd_clear();
 //	 lcd_set_cursor(0, 0);
 //	 lcd_write_string(msg);
-	 HAL_Delay(1500);
+//	 HAL_Delay(1500);
+
 
     /* USER CODE END WHILE */
 
