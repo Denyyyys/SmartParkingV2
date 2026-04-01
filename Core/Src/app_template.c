@@ -18,8 +18,8 @@ Maintainer: Miguel Luis and Gregory Cristian
 #include "app_template.h"
 #include "lcd.h"
 #include "stm32u5xx_hal.h"
-
-#define RF_FREQUENCY                                868000000 // Hz
+#include "usart.h"
+#define RF_FREQUENCY                                889500000 // Hz
 #define TX_OUTPUT_POWER                             0         // dBm
 
 #if defined( USE_MODEM_LORA )
@@ -124,6 +124,7 @@ void OnRxError( void );
 /**
  * Main application entry point.
  */
+
 void app_main( void )
 {
     // Target board initialisation
@@ -163,7 +164,7 @@ void app_main( void )
 						0,								/* Sets the coding rate (LoRa only) FSK: N/A ( set to 0 ) */
                         FSK_PREAMBLE_LENGTH,			/* Sets the preamble length. FSK: Number of bytes */
 						FSK_FIX_LENGTH_PAYLOAD_ON,		/* Fixed length packets [0: variable, 1: fixed] */
-						true,							/* Enables disables the CRC [0: OFF, 1: ON] */
+						false,							/* Enables disables the CRC [0: OFF, 1: ON] */
 						0,								/* Enables disables the intra-packet frequency hopping. FSK: N/A ( set to 0 ) */
 						0,								/* Number of symbols bewteen each hop. FSK: N/A ( set to 0 ) */
 						0,								/* Inverts IQ signals (LoRa only). FSK: N/A ( set to 0 ) */
@@ -179,7 +180,7 @@ void app_main( void )
 						0,								/* Sets the RxSingle timeout value (LoRa only). FSK: N/A ( set to 0 ) */
 						FSK_FIX_LENGTH_PAYLOAD_ON,		/* Fixed length packets [0: variable, 1: fixed] */
 						0,								/* Sets payload length when fixed lenght is used. */
-						true,							/* Enables/Disables the CRC [0: OFF, 1: ON] */
+						false,							/* Enables/Disables the CRC [0: OFF, 1: ON] */
                         0,								/* Enables disables the intra-packet frequency hopping. FSK: N/A ( set to 0 ) */
 						0,								/* Number of symbols bewteen each hop. FSK: N/A ( set to 0 ) */
 						false,							/* Inverts IQ signals (LoRa only). FSK: N/A ( set to 0 ) */
@@ -191,8 +192,8 @@ void app_main( void )
 #endif
     
 
-    tx_loop();
-//    rx_loop();
+//    tx_loop();
+    rx_loop();
 
     while(1)
     {
@@ -233,11 +234,12 @@ void rx_loop(void)
 //	lcd_clear();
 
 	Radio.Rx(0);
-
+	char* on_msg = "Swieci\r\n";
 	while(1)
 	{
 	    DelayMs(25);
 //		lcd_clear();
+//		HAL_UART_Transmit(&huart1, (uint8_t*)&on_msg, 1, HAL_MAX_DELAY);
 
 		snprintf(buf, sizeof(buf), "%d %d %d %d %d ", RssiValue, trx_events_cnt.rxdone, trx_events_cnt.rxerror, trx_events_cnt.rxtimeout, loop_cnt);
 
@@ -255,9 +257,15 @@ void rx_loop(void)
 			lcd_set_cursor(1, 0);
 			lcd_write_string(Buffer);
 	*/
-			printf("%s  \t", buf);
-			RtcGetTimeStr((uint8_t*)buf);
-			printf("Local time: %s, received: %s\r\n", buf, Buffer);
+//			printf("%s  \t", buf);
+//			RtcGetTimeStr((uint8_t*)buf);
+//			printf("Local time: %s, received: %s\r\n", buf, Buffer);
+//			HAL_UART_Transmit(&huart1, (uint8_t*)&on_msg, 1, HAL_MAX_DELAY);
+//		    char msg[] = "Hello World\r\n";
+		    snprintf(buf, sizeof(buf), "RSSI: %d\r\n", RssiValue);
+
+		    // HAL_UART_Transmit(UART handle, pointer do danych, długość danych, timeout w ms)
+		    HAL_UART_Transmit(&huart1, (uint8_t*)buf, strlen(buf), HAL_MAX_DELAY);
 			State = RX;
 		}
 
