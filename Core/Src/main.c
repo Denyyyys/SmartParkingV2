@@ -36,23 +36,12 @@
 #include "cmox_init.h"
 #include "hash/cmox_hash.h"
 #include "cmox_crypto.h"
-
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-int __io_putchar(int ch) {
-	HAL_UART_Transmit(&huart1, (uint8_t*)&ch, 1, HAL_MAX_DELAY);
-	return 1;
-}
 
-void btox(uint8_t *hexbuf, const uint8_t *binbuf, int n) {
-	n *= 2;
-	hexbuf[n] = 0x00;
-	const char hex[]= "0123456789abcdef";
-	while ( -- n >= 0)
-		hexbuf[n] = hex[(binbuf[n>>1] >> ((1-(n&1)) << 2)) & 0xF];
-}
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -68,6 +57,9 @@ void btox(uint8_t *hexbuf, const uint8_t *binbuf, int n) {
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+bool gateOpened = true;
+bool gateClosed = false;
+bool gateMoves = false;
 
 /* USER CODE END PV */
 
@@ -75,22 +67,59 @@ void btox(uint8_t *hexbuf, const uint8_t *binbuf, int n) {
 void SystemClock_Config(void);
 static void SystemPower_Config(void);
 /* USER CODE BEGIN PFP */
+
+void openGate(){
+	if (gateMoves || gateOpened) {
+		return;
+	}
+	gateMoves = true;
+	__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, 18);
+	gateMoves = false;
+	gateOpened = true;
+	gateClosed = false;
+}
+
+void closeGate() {
+	if (gateMoves || gateClosed) {
+		return;
+	}
+
+	gateMoves = true;
+	__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, 40);
+	gateMoves = false;
+	gateClosed = true;
+	gateOpened = false;
+}
 void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin)
 {
 	if (GPIO_Pin == B3_Pin)
 	{
+		openGate();
 		printf("yo3");
 //		HAL_GPIO_TogglePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
 	}
 
 	if (GPIO_Pin == B2_Pin)
 	{
+		closeGate();
 		printf("yo2");
 //		HAL_GPIO_TogglePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
 	}
-
-
 }
+
+int __io_putchar(int ch) {
+	HAL_UART_Transmit(&huart1, (uint8_t*)&ch, 1, HAL_MAX_DELAY);
+	return 1;
+}
+
+void btox(uint8_t *hexbuf, const uint8_t *binbuf, int n) {
+	n *= 2;
+	hexbuf[n] = 0x00;
+	const char hex[]= "0123456789abcdef";
+	while ( -- n >= 0)
+		hexbuf[n] = hex[(binbuf[n>>1] >> ((1-(n&1)) << 2)) & 0xF];
+}
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
