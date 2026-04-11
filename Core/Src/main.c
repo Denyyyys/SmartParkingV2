@@ -61,6 +61,33 @@ bool gateOpened = true;
 bool gateClosed = false;
 bool gateMoves = false;
 
+volatile uint32_t rise_time = 0;
+volatile uint32_t fall_time = 0;
+volatile uint32_t pulse_width = 0;
+volatile uint8_t edge_state = 0; // 0 - waiting for rise, 1 - waiting for fall
+
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
+    if (htim->Instance == TIM1) {
+        if (edge_state == 0) { // should be rising edge
+            rise_time = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
+            edge_state = 1;
+        }
+        else { // should be falling edge
+            fall_time = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
+
+            // handle overflow (if counter wrapped around)
+            if (fall_time >= rise_time) {
+                pulse_width = fall_time - rise_time;
+            } else {
+                pulse_width = (htim->Instance->ARR - rise_time) + fall_time;
+            }
+
+            edge_state = 0;
+        }
+    }
+}
+
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -118,6 +145,18 @@ void btox(uint8_t *hexbuf, const uint8_t *binbuf, int n) {
 	const char hex[]= "0123456789abcdef";
 	while ( -- n >= 0)
 		hexbuf[n] = hex[(binbuf[n>>1] >> ((1-(n&1)) << 2)) & 0xF];
+}
+
+void delay_us(uint16_t us) {
+    __HAL_TIM_SET_COUNTER(&htim16, 0);
+    HAL_TIM_Base_Start(&htim16);
+    while (__HAL_TIM_GET_COUNTER(&htim16) < us) {
+        // Wait until the timer reaches the number of microseconds
+    }
+
+    HAL_TIM_Base_Stop(&htim16);
+    __HAL_TIM_SET_COUNTER(&htim16, 0);
+	return;
 }
 
 /* USER CODE END PFP */
