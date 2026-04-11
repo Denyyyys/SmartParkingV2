@@ -159,6 +159,15 @@ void delay_us(uint16_t us) {
 	return;
 }
 
+void start_measuring_distance()
+{
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_SET);
+	delay_us(15); // 15 just in case (instead of 10)
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_RESET);
+	return;
+}
+
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -215,7 +224,7 @@ int main(void)
   MX_TIM16_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
-
+  HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_1);
 //  lcd_init();
 //  lcd_backlight(1);
 //  char* msg = "Swieci";
