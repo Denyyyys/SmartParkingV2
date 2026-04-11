@@ -386,6 +386,18 @@ int main(void)
 
   while (1)
   {
+	start_measuring_distance();
+	// wait for the echo to finish (sound goes brrrr)
+	HAL_Delay(30);
+
+	float distance = (float)pulse_width * 0.01715f;
+
+	char msg[50];
+	int len = sprintf(msg, "Distance: %.2f cm\r\n", distance);
+	HAL_UART_Transmit(&huart1, (uint8_t*)msg, len, HAL_MAX_DELAY);
+	// short rest before next measurement
+	HAL_Delay(60);
+
 //	  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 2000);
 //	  HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
 //	  HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
