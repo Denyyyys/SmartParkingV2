@@ -18,6 +18,7 @@ Maintainer: Miguel Luis and Gregory Cristian
 #include "app_template.h"
 #include "lcd.h"
 #include "stm32u5xx_hal.h"
+#include "stdbool.h"
 
 #define RF_FREQUENCY                                868000000 // Hz
 #define TX_OUTPUT_POWER                             0         // dBm
@@ -119,6 +120,7 @@ void OnRxTimeout( void );
 void OnRxError( void );
 
 
+volatile bool b1Pressed = false;
 
 
 /**
@@ -236,6 +238,11 @@ void rx_loop(void)
 
 	while(1)
 	{
+		if (b1Pressed) {
+
+			b1Pressed = false;
+		}
+
 	    DelayMs(25);
 
 		snprintf(buf, sizeof(buf), "%d %d %d %d %d ", RssiValue, trx_events_cnt.rxdone, trx_events_cnt.rxerror, trx_events_cnt.rxtimeout, loop_cnt);

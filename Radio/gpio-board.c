@@ -14,6 +14,9 @@ Maintainer: Miguel Luis and Gregory Cristian
 */
 #include "board.h"
 #include "gpio-board.h"
+#include "stdbool.h"
+
+extern volatile b1Pressed;
 
 static GpioIrqHandler *GpioIrq[16];
 
@@ -326,13 +329,13 @@ void EXTI7_IRQHandler( void )
     HAL_GPIO_EXTI_IRQHandler( GPIO_PIN_7 );
 }
 
-void EXTI8_IRQHandler( void )
-{
-#if !defined( USE_NO_TIMER )
-    RtcRecoverMcuStatus( );
-#endif
-    HAL_GPIO_EXTI_IRQHandler( GPIO_PIN_8 );
-}
+//void EXTI8_IRQHandler( void )
+//{
+//#if !defined( USE_NO_TIMER )
+//    RtcRecoverMcuStatus( );
+//#endif
+//    HAL_GPIO_EXTI_IRQHandler( GPIO_PIN_8 );
+//}
 
 void EXTI9_IRQHandler( void )
 {
@@ -425,6 +428,11 @@ void EXTI15_10_IRQHandler( void )
 //void HAL_GPIO_EXTI_Callback( uint16_t gpioPin )       // PK: dla L476
 void HAL_GPIO_EXTI_Rising_Callback( uint16_t gpioPin )  // PK: dla U545
 {
+	if (gpioPin == GPIO_PIN_8)
+	{
+		b1Pressed = true;
+	}
+
     uint8_t callbackIndex = 0;
 
     if( gpioPin > 0 )
