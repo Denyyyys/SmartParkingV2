@@ -23,7 +23,7 @@
 #include "icache.h"
 #include "rtc.h"
 #include "spi.h"
-//#include "tim.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -299,6 +299,11 @@ int main(void)
   app_main();
   while (1)
   {
+		HAL_Delay(1000);
+	  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 120); // 90 degrees
+	  HAL_Delay(1000);
+	  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 90); // 180 degrees
+	  HAL_Delay(1000);
 //	  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 80);  // 0 degrees
 //	      HAL_Delay(1000);
 //	      __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 120); // 90 degrees

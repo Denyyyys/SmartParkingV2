@@ -78,7 +78,7 @@ Maintainer: Andreas Pella (IMST GmbH), Miguel Luis and Gregory Cristian
 #define RADIO_DIO_5                                 PB_8
 
 #define RADIO_ANT_SWITCH_RX                         PB_5 //LED PIN
-#define RADIO_ANT_SWITCH_TX                         PB_4 //LED PIN  (U5: zmienione z PB3 - PK)
+//#define RADIO_ANT_SWITCH_TX                         PB_4 //LED PIN  (U5: zmienione z PB3 - PK)
 
 /*
 #define OSC_LSE_IN                                  PC_14

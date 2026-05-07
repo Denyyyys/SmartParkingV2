@@ -1,17 +1,17 @@
 /*
  / _____)             _              | |
-( (____  _____ ____ _| |_ _____  ____| |__
+ ( (____  _____ ____ _| |_ _____  ____| |__
  \____ \| ___ |    (_   _) ___ |/ ___)  _ \
  _____) ) ____| | | || |_| ____( (___| | | |
-(______/|_____)_|_|_| \__)_____)\____)_| |_|
-    (C)2013 Semtech
+ (______/|_____)_|_|_| \__)_____)\____)_| |_|
+ (C)2013 Semtech
 
-Description: Ping-Pong implementation
+ Description: Ping-Pong implementation
 
-License: Revised BSD License, see LICENSE.TXT file include in the project
+ License: Revised BSD License, see LICENSE.TXT file include in the project
 
-Maintainer: Miguel Luis and Gregory Cristian
-*/
+ Maintainer: Miguel Luis and Gregory Cristian
+ */
 #include <string.h>
 #include "board.h"
 #include "radio.h"
@@ -53,16 +53,9 @@ Maintainer: Miguel Luis and Gregory Cristian
     #error "Please define a modem in the compiler options."
 #endif
 
-typedef enum
-{
-    LOWPOWER,
-    RX,
-	RX_DONE,
-    RX_TIMEOUT,
-    RX_ERROR,
-    TX,
-    TX_TIMEOUT,
-}States_t;
+typedef enum {
+	LOWPOWER, RX, RX_DONE, RX_TIMEOUT, RX_ERROR, TX, TX_TIMEOUT,
+} States_t;
 
 #define RX_TIMEOUT_VALUE                            1000
 #define BUFFER_SIZE                                 13
@@ -71,7 +64,6 @@ States_t State = LOWPOWER;
 
 volatile int8_t RssiValue = 0;
 volatile int8_t SnrValue = 0;
-
 
 uint16_t BufferSize = BUFFER_SIZE;
 uint8_t Buffer[BUFFER_SIZE];
@@ -89,7 +81,6 @@ trx_events_cnt_t trx_events_cnt;
 int rx_cnt = 0;
 int txdone_cnt = 0;
 
-
 /*!
  * Radio events function pointer
  */
@@ -98,51 +89,50 @@ static RadioEvents_t RadioEvents;
 /*!
  * \brief Function to be executed on Radio Tx Done event
  */
-void OnTxDone( void );
+void OnTxDone(void);
 
 /*!
  * \brief Function to be executed on Radio Rx Done event
  */
-void OnRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr );
+void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr);
 
 /*!
  * \brief Function executed on Radio Tx Timeout event
  */
-void OnTxTimeout( void );
+void OnTxTimeout(void);
 
 /*!
  * \brief Function executed on Radio Rx Timeout event
  */
-void OnRxTimeout( void );
+void OnRxTimeout(void);
 
 /*!
  * \brief Function executed on Radio Rx Error event
  */
-void OnRxError( void );
-
+void OnRxError(void);
 
 volatile bool b1Pressed = false;
-
+bool gateIsMoving = false;
+bool gateIsClosed = true;
 
 /**
  * Main application entry point.
  */
-void app_main( void )
-{
-    // Target board initialisation
-    BoardInitMcu( );
-    BoardInitPeriph( );
+void app_main(void) {
+	// Target board initialisation
+	BoardInitMcu();
+	BoardInitPeriph();
 
-    // Radio initialization
-    RadioEvents.TxDone = OnTxDone;
-    RadioEvents.RxDone = OnRxDone;
-    RadioEvents.TxTimeout = OnTxTimeout;
-    RadioEvents.RxTimeout = OnRxTimeout;
-    RadioEvents.RxError = OnRxError;
+	// Radio initialization
+	RadioEvents.TxDone = OnTxDone;
+	RadioEvents.RxDone = OnRxDone;
+	RadioEvents.TxTimeout = OnTxTimeout;
+	RadioEvents.RxTimeout = OnRxTimeout;
+	RadioEvents.RxError = OnRxError;
 
-    Radio.Init( &RadioEvents );
+	Radio.Init(&RadioEvents);
 
-    Radio.SetChannel( RF_FREQUENCY );
+	Radio.SetChannel( RF_FREQUENCY);
 
 #if defined( USE_MODEM_LORA )
 
@@ -158,161 +148,154 @@ void app_main( void )
 
 #elif defined( USE_MODEM_FSK )
 
-    Radio.SetTxConfig(  MODEM_FSK,						/* Radio modem to be used [0: FSK, 1: LoRa] */
-    					TX_OUTPUT_POWER,				/* Sets the output power [dBm] */
-						FSK_FDEV,						/* Sets the frequency deviation (FSK only) [Hz] */
-						0,								/* Sets the bandwidth (LoRa only); 0 for FSK */
-                        FSK_DATARATE, 					/* Sets the Datarate. FSK: 600..300000 bits/s */
-						0,								/* Sets the coding rate (LoRa only) FSK: N/A ( set to 0 ) */
-                        FSK_PREAMBLE_LENGTH,			/* Sets the preamble length. FSK: Number of bytes */
-						FSK_FIX_LENGTH_PAYLOAD_ON,		/* Fixed length packets [0: variable, 1: fixed] */
-						true,							/* Enables disables the CRC [0: OFF, 1: ON] */
-						0,								/* Enables disables the intra-packet frequency hopping. FSK: N/A ( set to 0 ) */
-						0,								/* Number of symbols bewteen each hop. FSK: N/A ( set to 0 ) */
-						0,								/* Inverts IQ signals (LoRa only). FSK: N/A ( set to 0 ) */
-						3000							/* Transmission timeout [ms] */
+	Radio.SetTxConfig(MODEM_FSK, /* Radio modem to be used [0: FSK, 1: LoRa] */
+	TX_OUTPUT_POWER, /* Sets the output power [dBm] */
+	FSK_FDEV, /* Sets the frequency deviation (FSK only) [Hz] */
+	0, /* Sets the bandwidth (LoRa only); 0 for FSK */
+	FSK_DATARATE, /* Sets the Datarate. FSK: 600..300000 bits/s */
+	0, /* Sets the coding rate (LoRa only) FSK: N/A ( set to 0 ) */
+	FSK_PREAMBLE_LENGTH, /* Sets the preamble length. FSK: Number of bytes */
+	FSK_FIX_LENGTH_PAYLOAD_ON, /* Fixed length packets [0: variable, 1: fixed] */
+	true, /* Enables disables the CRC [0: OFF, 1: ON] */
+	0, /* Enables disables the intra-packet frequency hopping. FSK: N/A ( set to 0 ) */
+	0, /* Number of symbols bewteen each hop. FSK: N/A ( set to 0 ) */
+	0, /* Inverts IQ signals (LoRa only). FSK: N/A ( set to 0 ) */
+	3000 /* Transmission timeout [ms] */
 	);
-    
-    Radio.SetRxConfig(  MODEM_FSK,						/* Radio modem to be used [0: FSK, 1: LoRa] */
-    					FSK_BANDWIDTH,					/* Sets the bandwidth. FSK: >= 2600 and <= 250000 Hz. (CAUTION: This is "single side bandwidth") */
-						FSK_DATARATE,					/* Sets the Datarate. FSK: 600..300000 bits/s */
-						0,								/* Sets the coding rate (LoRa only) FSK: N/A ( set to 0 ) */
-						FSK_AFC_BANDWIDTH,				/* Sets the AFC Bandwidth (FSK only). FSK: >= 2600 and <= 250000 Hz */
-						FSK_PREAMBLE_LENGTH,			/* Sets the Preamble length. FSK: Number of bytes */
-						0,								/* Sets the RxSingle timeout value (LoRa only). FSK: N/A ( set to 0 ) */
-						FSK_FIX_LENGTH_PAYLOAD_ON,		/* Fixed length packets [0: variable, 1: fixed] */
-						0,								/* Sets payload length when fixed lenght is used. */
-						true,							/* Enables/Disables the CRC [0: OFF, 1: ON] */
-                        0,								/* Enables disables the intra-packet frequency hopping. FSK: N/A ( set to 0 ) */
-						0,								/* Number of symbols bewteen each hop. FSK: N/A ( set to 0 ) */
-						false,							/* Inverts IQ signals (LoRa only). FSK: N/A ( set to 0 ) */
-						true							/* Sets the reception in continuous mode. [false: single mode, true: continuous mode] */
+
+	Radio.SetRxConfig(MODEM_FSK, /* Radio modem to be used [0: FSK, 1: LoRa] */
+	FSK_BANDWIDTH, /* Sets the bandwidth. FSK: >= 2600 and <= 250000 Hz. (CAUTION: This is "single side bandwidth") */
+	FSK_DATARATE, /* Sets the Datarate. FSK: 600..300000 bits/s */
+	0, /* Sets the coding rate (LoRa only) FSK: N/A ( set to 0 ) */
+	FSK_AFC_BANDWIDTH, /* Sets the AFC Bandwidth (FSK only). FSK: >= 2600 and <= 250000 Hz */
+	FSK_PREAMBLE_LENGTH, /* Sets the Preamble length. FSK: Number of bytes */
+	0, /* Sets the RxSingle timeout value (LoRa only). FSK: N/A ( set to 0 ) */
+	FSK_FIX_LENGTH_PAYLOAD_ON, /* Fixed length packets [0: variable, 1: fixed] */
+	0, /* Sets payload length when fixed lenght is used. */
+	true, /* Enables/Disables the CRC [0: OFF, 1: ON] */
+	0, /* Enables disables the intra-packet frequency hopping. FSK: N/A ( set to 0 ) */
+	0, /* Number of symbols bewteen each hop. FSK: N/A ( set to 0 ) */
+	false, /* Inverts IQ signals (LoRa only). FSK: N/A ( set to 0 ) */
+	true /* Sets the reception in continuous mode. [false: single mode, true: continuous mode] */
 	);
 
 #else
     #error "Please define a frequency band in the compiler options."
 #endif
-    
 
-//    tx_loop();
-    rx_loop();
+	rx_loop();
 
-    while(1)
-    {
-    	printf("Infinite loop. This should never happen!\r\n");
-    }
+	while (1) {
+		printf("Infinite loop. This should never happen!\r\n");
+	}
 }
 
-void tx_loop(void)
+void openGate()
 {
-	uint8_t buf[50];
-	uint8_t txt[] = "NICK-xxxxxxxx-Pozdrowienia";
-	memcpy(buf, txt, sizeof(txt));
-	int cnt = 0;
-    while( 1 )
-    {
-        RtcGetTimeStr(buf+5);
-
-        Radio.Send( buf, 13 );
-
-        DelayMs( 250 );
-        cnt++;
-    }
+	gateIsMoving = true;
+	__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 140);
+	gateIsMoving = false;
+	gateIsClosed = false;
 }
 
-void rx_loop(void)
+void closeGate()
 {
-//	char buf[50];
-//	int loop_cnt = 0;
-//
-//	printf("\r\n\r\nRX loop start\r\n");
-//	int time_on_air;
-//	int payload_size = BUFFER_SIZE;
-//	time_on_air = Radio.TimeOnAir(MODEM_FSK, payload_size);
-//	printf("Time on air: %d us for payload_size: %d bytes\r\n", time_on_air, payload_size);
-//	  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
+	gateIsMoving = true;
+	__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 80);
+	gateIsMoving = false;
+	gateIsClosed = true;
+}
 
+void rx_loop(void) {
+	char buf[50];
+	int loop_cnt = 0;
+
+	printf("\r\n\r\nRX loop start\r\n");
+	int time_on_air;
+	int payload_size = BUFFER_SIZE;
+	time_on_air = Radio.TimeOnAir(MODEM_FSK, payload_size);
+	printf("Time on air: %d us for payload_size: %d bytes\r\n", time_on_air, payload_size);
+	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
 	lcd_init();
-//	DelayMs(100);
-//	lcd_clear();
+	closeGate();
+	DelayMs(100);
+	lcd_clear();
 
-//	Radio.Rx(0);
+	Radio.Rx(0);
 
-	while(1)
-	{
+	while (1) {
 		if (b1Pressed) {
 			b1Pressed = false;
 //			Radio.Sleep( );
+			openGate();
 			HAL_Delay(1000);
-//		  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 120);
-		  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 120); // 90 degrees
-		  HAL_Delay(1000);
-		  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 240); // 180 degrees
-		  HAL_Delay(1000);
+			closeGate();
+			HAL_Delay(1000);
 		}
 
-	    DelayMs(25);
+		DelayMs(25);
 
-//		snprintf(buf, sizeof(buf), "%d %d %d %d %d ", RssiValue, trx_events_cnt.rxdone, trx_events_cnt.rxerror, trx_events_cnt.rxtimeout, loop_cnt);
-//
-//		if (State == RX_TIMEOUT)
-//		{
-//			Radio.Rx(0);
-//			State = RX;
-//		}
-//
-//		if (State == RX_DONE)
-//		{
-//			lcd_clear();
-//
-//			printf("%s  \t", buf);
-//			RtcGetTimeStr((uint8_t*)buf);
-//			printf("Local time: %s, received: %s\r\n", buf, Buffer);
-//			lcd_set_cursor(0,0);
-//			lcd_write_string(Buffer);
-//			State = RX;
-//		}
-//
-//		loop_cnt++;
+		snprintf(buf, sizeof(buf), "%d %d %d %d %d ", RssiValue, trx_events_cnt.rxdone, trx_events_cnt.rxerror, trx_events_cnt.rxtimeout, loop_cnt);
+
+		if (State == RX_TIMEOUT)
+		{
+			Radio.Rx(0);
+			State = RX;
+		}
+
+		if (State == RX_DONE)
+		{
+			lcd_clear();
+
+			printf("%s  \t", buf);
+			RtcGetTimeStr((uint8_t*)buf);
+			printf("Local time: %s, received: %s\r\n", buf, Buffer);
+			if (Buffer[0] == 'N')
+			{
+				openGate();
+
+			}
+
+			lcd_set_cursor(0,0);
+			lcd_write_string(Buffer);
+			State = RX;
+		}
+
+		loop_cnt++;
 	}
 
 }
 
-void OnTxDone( void )
-{
-    Radio.Sleep( );
-    State = TX;
-    trx_events_cnt.txdone++;
+void OnTxDone(void) {
+	Radio.Sleep();
+	State = TX;
+	trx_events_cnt.txdone++;
 }
 
-void OnRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
-{
-    BufferSize = size;
-    memcpy( Buffer, payload, BufferSize );
-    RssiValue = rssi;
-    SnrValue = snr;
+void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr) {
+	BufferSize = size;
+	memcpy(Buffer, payload, BufferSize);
+	RssiValue = rssi;
+	SnrValue = snr;
 //    State = RX;
-    State = RX_DONE;
-    trx_events_cnt.rxdone++;
+	State = RX_DONE;
+	trx_events_cnt.rxdone++;
 //    Radio.Rx(0);
 }
 
-void OnTxTimeout( void )
-{
-    Radio.Sleep( );
-    State = TX_TIMEOUT;
-    trx_events_cnt.txtimeout++;
+void OnTxTimeout(void) {
+	Radio.Sleep();
+	State = TX_TIMEOUT;
+	trx_events_cnt.txtimeout++;
 }
 
-void OnRxTimeout( void )
-{
-    State = RX_TIMEOUT;
-    trx_events_cnt.rxtimeout++;
+void OnRxTimeout(void) {
+	State = RX_TIMEOUT;
+	trx_events_cnt.rxtimeout++;
 }
 
-void OnRxError( void )
-{
-    State = RX_ERROR;
-    trx_events_cnt.rxerror++;
-    Radio.Rx(0);
+void OnRxError(void) {
+	State = RX_ERROR;
+	trx_events_cnt.rxerror++;
+	Radio.Rx(0);
 }

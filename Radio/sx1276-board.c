@@ -114,27 +114,31 @@ void SX1276SetAntSwLowPower( bool status )
 
 void SX1276AntSwInit( void )
 {
-    GpioInit( &AntTx, RADIO_ANT_SWITCH_TX, PIN_OUTPUT, PIN_PUSH_PULL, PIN_PULL_UP, 0 );
-    GpioInit( &AntRx, RADIO_ANT_SWITCH_RX, PIN_OUTPUT, PIN_PUSH_PULL, PIN_PULL_UP, 1 );
+    // Disabled on purpose: PB4 is used by TIM3_CH1 (servo PWM) in this project.
+    // GpioInit( &AntTx, RADIO_ANT_SWITCH_TX, PIN_OUTPUT, PIN_PUSH_PULL, PIN_PULL_UP, 0 );
+    // GpioInit( &AntRx, RADIO_ANT_SWITCH_RX, PIN_OUTPUT, PIN_PUSH_PULL, PIN_PULL_UP, 1 );
 }
 
 void SX1276AntSwDeInit( void )
 {
-    GpioInit( &AntTx, RADIO_ANT_SWITCH_TX, PIN_ANALOGIC, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
-    GpioInit( &AntRx, RADIO_ANT_SWITCH_RX, PIN_ANALOGIC, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
+    // Disabled on purpose: PB4 is used by TIM3_CH1 (servo PWM) in this project.
+    // GpioInit( &AntTx, RADIO_ANT_SWITCH_TX, PIN_ANALOGIC, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
+    // GpioInit( &AntRx, RADIO_ANT_SWITCH_RX, PIN_ANALOGIC, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
 }
 
 void SX1276SetAntSw( uint8_t rxTx )
 {
     if( rxTx != 0 ) // 1: TX, 0: RX
     {
-        GpioWrite( &AntRx, 0 );
-        GpioWrite( &AntTx, 1 );
+        // Disabled on purpose: PB4 is used by TIM3_CH1 (servo PWM) in this project.
+        // GpioWrite( &AntRx, 0 );
+        // GpioWrite( &AntTx, 1 );
     }
     else
     {
-        GpioWrite( &AntRx, 1 );
-        GpioWrite( &AntTx, 0 );
+        // Disabled on purpose: PB4 is used by TIM3_CH1 (servo PWM) in this project.
+        // GpioWrite( &AntRx, 1 );
+        // GpioWrite( &AntTx, 0 );
     }
 }
 
