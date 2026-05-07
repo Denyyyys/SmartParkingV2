@@ -19,6 +19,7 @@ Maintainer: Miguel Luis and Gregory Cristian
 #include "lcd.h"
 #include "stm32u5xx_hal.h"
 #include "stdbool.h"
+#include "tim.h"
 
 #define RF_FREQUENCY                                868000000 // Hz
 #define TX_OUTPUT_POWER                             0         // dBm
@@ -221,51 +222,58 @@ void tx_loop(void)
 
 void rx_loop(void)
 {
-	char buf[50];
-	int loop_cnt = 0;
-
-	printf("\r\n\r\nRX loop start\r\n");
-	int time_on_air;
-	int payload_size = BUFFER_SIZE;
-	time_on_air = Radio.TimeOnAir(MODEM_FSK, payload_size);
-	printf("Time on air: %d us for payload_size: %d bytes\r\n", time_on_air, payload_size);
+//	char buf[50];
+//	int loop_cnt = 0;
+//
+//	printf("\r\n\r\nRX loop start\r\n");
+//	int time_on_air;
+//	int payload_size = BUFFER_SIZE;
+//	time_on_air = Radio.TimeOnAir(MODEM_FSK, payload_size);
+//	printf("Time on air: %d us for payload_size: %d bytes\r\n", time_on_air, payload_size);
+//	  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
 
 	lcd_init();
 //	DelayMs(100);
 //	lcd_clear();
 
-	Radio.Rx(0);
+//	Radio.Rx(0);
 
 	while(1)
 	{
 		if (b1Pressed) {
-
 			b1Pressed = false;
+//			Radio.Sleep( );
+			HAL_Delay(1000);
+//		  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 120);
+		  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 120); // 90 degrees
+		  HAL_Delay(1000);
+		  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 240); // 180 degrees
+		  HAL_Delay(1000);
 		}
 
 	    DelayMs(25);
 
-		snprintf(buf, sizeof(buf), "%d %d %d %d %d ", RssiValue, trx_events_cnt.rxdone, trx_events_cnt.rxerror, trx_events_cnt.rxtimeout, loop_cnt);
-
-		if (State == RX_TIMEOUT)
-		{
-			Radio.Rx(0);
-			State = RX;
-		}
-
-		if (State == RX_DONE)
-		{
-			lcd_clear();
-
-			printf("%s  \t", buf);
-			RtcGetTimeStr((uint8_t*)buf);
-			printf("Local time: %s, received: %s\r\n", buf, Buffer);
-			lcd_set_cursor(0,0);
-			lcd_write_string(Buffer);
-			State = RX;
-		}
-
-		loop_cnt++;
+//		snprintf(buf, sizeof(buf), "%d %d %d %d %d ", RssiValue, trx_events_cnt.rxdone, trx_events_cnt.rxerror, trx_events_cnt.rxtimeout, loop_cnt);
+//
+//		if (State == RX_TIMEOUT)
+//		{
+//			Radio.Rx(0);
+//			State = RX;
+//		}
+//
+//		if (State == RX_DONE)
+//		{
+//			lcd_clear();
+//
+//			printf("%s  \t", buf);
+//			RtcGetTimeStr((uint8_t*)buf);
+//			printf("Local time: %s, received: %s\r\n", buf, Buffer);
+//			lcd_set_cursor(0,0);
+//			lcd_write_string(Buffer);
+//			State = RX;
+//		}
+//
+//		loop_cnt++;
 	}
 
 }
