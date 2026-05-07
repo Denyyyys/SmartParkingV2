@@ -278,21 +278,21 @@ void EXTI1_IRQHandler( void )
     HAL_GPIO_EXTI_IRQHandler( GPIO_PIN_1 );
 }
 
-//void EXTI2_IRQHandler( void )
-//{
-//#if !defined( USE_NO_TIMER )
-//    RtcRecoverMcuStatus( );
-//#endif
-//    HAL_GPIO_EXTI_IRQHandler( GPIO_PIN_2 );
-//}
+void EXTI2_IRQHandler( void )
+{
+#if !defined( USE_NO_TIMER )
+    RtcRecoverMcuStatus( );
+#endif
+    HAL_GPIO_EXTI_IRQHandler( GPIO_PIN_2 );
+}
 
-//void EXTI3_IRQHandler( void )
-//{
-//#if !defined( USE_NO_TIMER )
-//    RtcRecoverMcuStatus( );
-//#endif
-//    HAL_GPIO_EXTI_IRQHandler( GPIO_PIN_3 );
-//}
+void EXTI3_IRQHandler( void )
+{
+#if !defined( USE_NO_TIMER )
+    RtcRecoverMcuStatus( );
+#endif
+    HAL_GPIO_EXTI_IRQHandler( GPIO_PIN_3 );
+}
 
 void EXTI4_IRQHandler( void )
 {
@@ -366,13 +366,13 @@ void EXTI12_IRQHandler( void )
     HAL_GPIO_EXTI_IRQHandler( GPIO_PIN_12 );
 }
 
-//void EXTI13_IRQHandler( void )
-//{
-//#if !defined( USE_NO_TIMER )
-//    RtcRecoverMcuStatus( );
-//#endif
-//    HAL_GPIO_EXTI_IRQHandler( GPIO_PIN_13 );
-//}
+void EXTI13_IRQHandler( void )
+{
+#if !defined( USE_NO_TIMER )
+    RtcRecoverMcuStatus( );
+#endif
+    HAL_GPIO_EXTI_IRQHandler( GPIO_PIN_13 );
+}
 
 void EXTI14_IRQHandler( void )
 {
