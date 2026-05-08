@@ -115,6 +115,58 @@ volatile bool b1Pressed = false;
 bool gateIsMoving = false;
 bool gateIsClosed = true;
 
+volatile uint32_t rise_time = 0;
+volatile uint32_t fall_time = 0;
+volatile uint32_t pulse_width = 0;
+volatile uint8_t edge_state = 0; // 0 - waiting for rise, 1 - waiting for fall
+volatile bool pa8_output = true;
+volatile bool pa0PulseActive = false;
+
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
+    if (htim->Instance == TIM1) {
+        if (edge_state == 0) { // should be rising edge
+            rise_time = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
+            edge_state = 1;
+        }
+        else { // should be falling edge
+            fall_time = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
+
+            // handle overflow (if counter wrapped around)
+            if (fall_time >= rise_time) {
+                pulse_width = fall_time - rise_time;
+            } else {
+                pulse_width = (htim->Instance->ARR - rise_time) + fall_time;
+            }
+
+            edge_state = 0;
+        }
+    }
+}
+
+static void PA0_Pulse_StartUs(uint16_t pulseWidthUs)
+{
+	if (pulseWidthUs == 0 || pa0PulseActive) {
+		return;
+	}
+
+	pa0PulseActive = true;
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_SET);
+
+	__HAL_TIM_SET_COUNTER(&htim16, 0);
+	__HAL_TIM_SET_AUTORELOAD(&htim16, (uint32_t)pulseWidthUs - 1U);
+	__HAL_TIM_CLEAR_FLAG(&htim16, TIM_FLAG_UPDATE);
+	HAL_TIM_Base_Start_IT(&htim16);
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+	if (htim->Instance == TIM16) {
+		HAL_TIM_Base_Stop_IT(&htim16);
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_RESET);
+		pa0PulseActive = false;
+	}
+}
+
 /**
  * Main application entry point.
  */
@@ -206,6 +258,11 @@ void closeGate()
 	gateIsClosed = true;
 }
 
+void delay_us()
+{
+
+}
+
 void rx_loop(void) {
 	char buf[50];
 	int loop_cnt = 0;
@@ -216,6 +273,8 @@ void rx_loop(void) {
 	time_on_air = Radio.TimeOnAir(MODEM_FSK, payload_size);
 	printf("Time on air: %d us for payload_size: %d bytes\r\n", time_on_air, payload_size);
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
+	HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_1);
+
 	lcd_init();
 	closeGate();
 	DelayMs(100);
@@ -225,12 +284,31 @@ void rx_loop(void) {
 
 	while (1) {
 		if (b1Pressed) {
+			float distances[5];
+			for (int i = 0; i < 5; i++)
+			{
+				PA0_Pulse_StartUs(15);
+				HAL_Delay(100);
+				float distance = (float)pulse_width * 0.01715f;
+				distances[i] = distance;
+			}
+
+				//			Radio.Sleep( );
+
 			b1Pressed = false;
 //			Radio.Sleep( );
 			openGate();
 			HAL_Delay(1000);
 			closeGate();
 			HAL_Delay(1000);
+//			start_measuring_distance();
+			// wait for the echo to finish (sound goes brrrr)
+//			HAL_Delay(30);
+//			float distance = (float)pulse_width * 0.01715f;
+//
+//			char msg[50];
+//			int len = sprintf(msg, "Distance: %.2f cm\r\n", distance);
+//			printf("sf");
 		}
 
 		DelayMs(25);

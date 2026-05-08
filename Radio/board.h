@@ -107,9 +107,9 @@ Maintainer: Andreas Pella (IMST GmbH), Miguel Luis and Gregory Cristian
 #else
 #define LED_1                                       PA_3
 #endif
-#define LED_2                                       PA_0
+//#define LED_2                                       PA_0
 #define LED_3                                       PA_1
-#define LED_4                                       PA_8
+//#define LED_4                                       PA_8
 
 
 /*!
@@ -119,9 +119,9 @@ Maintainer: Andreas Pella (IMST GmbH), Miguel Luis and Gregory Cristian
 #if ( USE_POTENTIOMETER == 0 )
 extern Gpio_t Led1;
 #endif
-extern Gpio_t Led2;
+//extern Gpio_t Led2;
 extern Gpio_t Led3;
-extern Gpio_t Led4;
+//extern Gpio_t Led4;
 
 /*!
  * MCU objects

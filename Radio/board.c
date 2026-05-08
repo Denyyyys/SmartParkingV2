@@ -41,9 +41,9 @@ Maintainer: Andreas Pella (IMST GmbH), Miguel Luis and Gregory Cristian
 #if ( USE_POTENTIOMETER == 0 )
 Gpio_t Led1;
 #endif
-Gpio_t Led2;
+//Gpio_t Led2;
 Gpio_t Led3;
-Gpio_t Led4;
+//Gpio_t Led4;
 
 /*
  * MCU objects
@@ -102,17 +102,19 @@ void BoardInitPeriph( void )
 #if ( USE_POTENTIOMETER == 0 )
     GpioInit( &Led1, LED_1, PIN_OUTPUT, PIN_PUSH_PULL, PIN_NO_PULL, 1 );
 #endif
-    GpioInit( &Led2, LED_2, PIN_OUTPUT, PIN_PUSH_PULL, PIN_NO_PULL, 1 );
+//    GpioInit( &Led2, LED_2, PIN_OUTPUT, PIN_PUSH_PULL, PIN_NO_PULL, 1 );
     GpioInit( &Led3, LED_3, PIN_OUTPUT, PIN_PUSH_PULL, PIN_NO_PULL, 1 );
-    GpioInit( &Led4, LED_4, PIN_OUTPUT, PIN_PUSH_PULL, PIN_NO_PULL, 1 );
+    // Disabled on purpose: PA8 is used as a dedicated GPIO output for external sensor control.
+//    GpioInit( &Led4, LED_4, PIN_OUTPUT, PIN_PUSH_PULL, PIN_NO_PULL, 1 );
 
     // Switch LED 1, 2, 3, 4 OFF
 #if ( USE_POTENTIOMETER == 0 )
     GpioWrite( &Led1, 0 );
 #endif
-    GpioWrite( &Led2, 0 );
+//    GpioWrite( &Led2, 0 );
     GpioWrite( &Led3, 0 );
-    GpioWrite( &Led4, 0 );
+// Disabled on purpose: PA8 is used as a dedicated GPIO output for external sensor control.
+//    GpioWrite( &Led4, 0 );
 }
 
 void BoardInitMcu( void )
