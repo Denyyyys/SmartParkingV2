@@ -121,7 +121,9 @@ volatile uint32_t pulse_width = 0;
 volatile uint8_t edge_state = 0; // 0 - waiting for rise, 1 - waiting for fall
 volatile bool pa8_output = true;
 volatile bool pa0PulseActive = false;
-volatile float average_distance = 0.f;
+// TODO - change based on layout of objects
+volatile float threshold = 10.0f;
+volatile float average_distance = 10.0f;
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
     if (htim->Instance == TIM1) {
@@ -304,14 +306,7 @@ void rx_loop(void) {
 			HAL_Delay(1000);
 			closeGate();
 			HAL_Delay(1000);
-//			start_measuring_distance();
-			// wait for the echo to finish (sound goes brrrr)
-//			HAL_Delay(30);
-//			float distance = (float)pulse_width * 0.01715f;
-//
-//			char msg[50];
-//			int len = sprintf(msg, "Distance: %.2f cm\r\n", distance);
-//			printf("sf");
+
 		}
 
 		DelayMs(25);
@@ -333,7 +328,49 @@ void rx_loop(void) {
 			printf("Local time: %s, received: %s\r\n", buf, Buffer);
 			if (Buffer[0] == 'N')
 			{
+				// response is good - open gate
 				openGate();
+
+				// wait for car to move
+				HAL_Delay(5000);
+
+				// check if szlaban can be closed
+				do {
+					float distances[5];
+					float sum = 0.f;
+					for (int i = 0; i < 5; i++)
+					{
+						// send trig signal to HC-SR04 to start measuring
+						PA0_Pulse_StartUs(15);
+
+						// wait for sound - it goes brrrrr
+						HAL_Delay(100);
+
+						// calculate distance
+						float distance = (float)pulse_width * 0.01715f;
+						distances[i] = distance;
+						sum += distance;
+					}
+
+					// take average distance based on 5 measurments to increase reliability (i hope it does help)
+					average_distance = sum / 5.0f;
+				} while (average_distance <= threshold);
+
+				// if here it means that average_distance > threshold - car is not there - we can close szlaban, but
+				// just in case wait a bit more - 5s
+				HAL_Delay(5000);
+
+				closeGate();
+				Radio.Sleep( );
+
+				// need some time to set radio in sleep mode - maybe is possible with less value - have to check
+				HAL_Delay(5000);
+
+				uint8_t txbuf[50];
+				const char *txt = "NICK-xxxxxxxx-Pozdrowienia";
+				size_t len = strlen(txt);
+				memcpy(txbuf, txt, len);
+				Radio.Send(txbuf, (uint8_t)len);
 
 			}
 
@@ -348,9 +385,10 @@ void rx_loop(void) {
 }
 
 void OnTxDone(void) {
-	Radio.Sleep();
+//	Radio.Sleep();
 	State = TX;
 	trx_events_cnt.txdone++;
+	Radio.Rx(0);
 }
 
 void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr) {
@@ -368,6 +406,7 @@ void OnTxTimeout(void) {
 	Radio.Sleep();
 	State = TX_TIMEOUT;
 	trx_events_cnt.txtimeout++;
+	Radio.Rx(0);
 }
 
 void OnRxTimeout(void) {
