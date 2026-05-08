@@ -121,6 +121,7 @@ volatile uint32_t pulse_width = 0;
 volatile uint8_t edge_state = 0; // 0 - waiting for rise, 1 - waiting for fall
 volatile bool pa8_output = true;
 volatile bool pa0PulseActive = false;
+volatile float average_distance = 0.f;
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
     if (htim->Instance == TIM1) {
@@ -285,14 +286,16 @@ void rx_loop(void) {
 	while (1) {
 		if (b1Pressed) {
 			float distances[5];
+			float sum = 0.f;
 			for (int i = 0; i < 5; i++)
 			{
 				PA0_Pulse_StartUs(15);
 				HAL_Delay(100);
 				float distance = (float)pulse_width * 0.01715f;
 				distances[i] = distance;
+				sum += distance;
 			}
-
+			average_distance = sum / 5.0f;
 				//			Radio.Sleep( );
 
 			b1Pressed = false;
